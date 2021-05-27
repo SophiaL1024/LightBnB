@@ -94,7 +94,6 @@ exports.getAllReservations = getAllReservations;
  * @return {Promise<[{}]>}  A promise to the properties.
  */
 const getAllProperties = function(options, limit = 10) {
-  // const queryString = `SELECT * FROM properties  LIMIT $1`;
   const queryParams = [];
 
   let queryString = `
@@ -112,7 +111,7 @@ const getAllProperties = function(options, limit = 10) {
     queryString += `AND owner_id = $${queryParams.length} `;
   }
   if (options.minimum_price_per_night) {
-     queryParams.push(`${options.minimum_price_per_night}`);
+    queryParams.push(`${options.minimum_price_per_night}`);
     queryString += `AND cost_per_night/100 >= $${queryParams.length} `;
   }
   if (options.maximum_price_per_night) {
@@ -123,14 +122,13 @@ const getAllProperties = function(options, limit = 10) {
     queryParams.push(`${options.minimum_rating}`);
     queryString += `AND rating >= $${queryParams.length} `;
   }
-  
+
   queryParams.push(limit);
   queryString += `
   GROUP BY properties.id
   ORDER BY cost_per_night
   LIMIT $${queryParams.length};
   `;
-  console.log(queryString, queryParams);
 
   return pool.query(queryString, queryParams)
     .then((result) => {
@@ -149,9 +147,20 @@ exports.getAllProperties = getAllProperties;
  * @return {Promise<{}>} A promise to the property.
  */
 const addProperty = function(property) {
-  const propertyId = Object.keys(properties).length + 1;
-  property.id = propertyId;
-  properties[propertyId] = property;
-  return Promise.resolve(property);
+  const queryParams = [];
+  for (let i in property) {
+    queryParams.push(property[i]);
+  }
+  let queryString = `INSERT INTO properties (title, description,number_of_bedrooms,number_of_bathrooms,parking_spaces ,cost_per_night,thumbnail_photo_url, cover_photo_url,street, country, city,province,post_code,owner_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *;`
+
+  console.log(queryString, queryParams);
+
+  return pool.query(queryString, queryParams)
+    .then((result) => {
+      return result.rows;
+    })
+    .catch((err) => {
+      console.log(err.message);
+    });
 }
 exports.addProperty = addProperty;
