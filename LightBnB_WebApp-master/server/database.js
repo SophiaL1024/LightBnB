@@ -10,8 +10,8 @@ const configObj = {
 };
 const pool = new Pool(configObj);
 pool.connect()
-  .then(() => console.log('db connected'))
-  .catch(err => console.error('db connection error', err.stack));
+  .then(() => console.log('database is connected'))
+  .catch(err => console.error('database connection error', err.stack));
 /// Users
 
 /**
@@ -29,7 +29,14 @@ const getUserWithEmail = function(email) {
       user = null;
     }
   }
-  return Promise.resolve(user);
+  // pool.query(`
+  // SELECT users.email FROM users`)
+  //   .then((result) => {
+  //     return Promise.resolve(result.rows);
+  //   })
+  //   .catch(() => {
+  //     return null;
+  //   });
 }
 exports.getUserWithEmail = getUserWithEmail;
 
@@ -54,7 +61,13 @@ const addUser = function(user) {
   user.id = userId;
   users[userId] = user;
   return Promise.resolve(user);
-}
+  //   pool.query(`INSERT INTO users (name, email,password)
+  //   VALUES (user.name,user.email,user.password)
+  //   RETURNING *;`)
+  // .then((result)=>{
+  // return Promise.resolve(result.rows);
+  // })
+};
 exports.addUser = addUser;
 
 /// Reservations
@@ -78,24 +91,14 @@ exports.getAllReservations = getAllReservations;
  * @return {Promise<[{}]>}  A promise to the properties.
  */
 const getAllProperties = function(options, limit = 10) {
-  // const limitedProperties = {};
-  // for (let i = 1; i <= limit; i++) {
-  //   limitedProperties[i] = properties[i];
-  // }
-  // return Promise.resolve(limitedProperties);
-  pool.query(`SELECT * FROM properties LIMIT $1`,[limit])
+  let queryString=`SELECT * FROM properties  LIMIT $1`;
+  return pool.query(queryString, [limit])
     .then((result) => {
-      const limitedProperties = {};
-      for (let i = 1; i <= limit; i++) {
-        limitedProperties[i] = result.rows[i-1];
-      }
-      return Promise.resolve(limitedProperties);
-      // console.log(limitedProperties);
+      return result.rows;
     })
     .catch((err) => {
       console.log(err.message);
     });
-
 }
 exports.getAllProperties = getAllProperties;
 
